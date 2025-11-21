@@ -17,10 +17,12 @@ code {
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -30,4 +32,15 @@ code {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* JSON syntax highlighting in response viewer */
+pre {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  line-height: 1.5;
+}
+
+/* Smooth transitions */
+* {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
