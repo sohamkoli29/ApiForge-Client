@@ -110,7 +110,7 @@ const ResponseViewer = ({ response }) => {
             collapseStringsAfterLength={50}
             displayDataTypes={false}
             displayObjectSize={true}
-            enableClipboard={true}
+            enableClipboard={false}
             onCopy={(copy) => {
               navigator.clipboard.writeText(JSON.stringify(copy.src, null, 2))
               toast.success('Copied to clipboard!')
@@ -323,7 +323,7 @@ const ResponseViewer = ({ response }) => {
             </div>
             
             {/* Body Content - Scrollable */}
-            <div className="flex-1 min-h-0 max-h-[200px] overflow-auto">
+            <div className="flex-1 min-h-0  overflow-auto">
               {renderResponseBody()}
             </div>
           </div>

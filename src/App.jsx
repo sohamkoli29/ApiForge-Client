@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar'
 import RequestForm from './components/RequestForm'
 import ResponseViewer from './components/ResponseViewer'
 import UserProfile from './components/UserProfile'
+import Footer from './components/Footer'
 import { Toaster } from 'react-hot-toast'
 import { supabase } from './supabase'
 
@@ -515,6 +516,7 @@ function App() {
           <ResponseViewer response={response} />
         </div>
       </div>
+      <Footer/>
     </div>
   )
 }
