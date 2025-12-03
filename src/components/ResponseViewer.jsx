@@ -306,9 +306,9 @@ const ResponseViewer = ({ response }) => {
             {/* Body Header - Fixed */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
               <h4 className="font-medium text-gray-800">Response Body</h4>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 ">
                 {isJSON(response.data) && (
-                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                  <span className=" px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
                     JSON
                   </span>
                 )}
@@ -323,7 +323,7 @@ const ResponseViewer = ({ response }) => {
             </div>
             
             {/* Body Content - Scrollable */}
-            <div className="flex-1 min-h-0  overflow-auto">
+            <div className="flex-1 min-h-0  overflow-auto mb-[200px]">
               {renderResponseBody()}
             </div>
           </div>

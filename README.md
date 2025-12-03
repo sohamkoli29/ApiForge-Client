@@ -16,12 +16,3 @@ A full-stack API testing tool similar to Postman, built with React + Vite fronte
 - **Database**: Convex
 - **Deployment**: Vercel (frontend), Railway (backend)
 
-## Development
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   # Frontend
-   cd frontend && npm install
-   
-   # Backend  
-   cd backend && npm install

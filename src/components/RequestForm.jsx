@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Send, Plus, Trash2, CheckCircle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import AuthTab from './AuthTab'
+import config from '../config'
+
 
 const RequestForm = ({ onResponse, onSaveRequest, currentRequest }) => {
   const [activeTab, setActiveTab] = useState('params')
@@ -279,7 +281,7 @@ const RequestForm = ({ onResponse, onSaveRequest, currentRequest }) => {
       console.log('Sending request to proxy:', requestData)
 
       const startTime = Date.now()
-      const response = await fetch('http://localhost:3001/api/proxy', {
+     const response = await fetch(`${config.apiUrl}/api/proxy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

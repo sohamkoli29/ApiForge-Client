@@ -176,9 +176,13 @@ const Sidebar = ({
             <User className="w-6 h-6 text-white" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-800 truncate">
-              {user?.name || 'API Tester'}
-            </h3>
+           <h3 className="font-semibold text-gray-800 truncate">
+  {user?.user_metadata?.name ||
+   user?.user_metadata?.full_name ||
+   user?.email?.split('@')[0] ||
+   'API Tester'}
+</h3>
+
             <p className="text-sm text-gray-500 truncate">
               {user ? 'Professional Plan' : 'Demo Mode'}
             </p>
