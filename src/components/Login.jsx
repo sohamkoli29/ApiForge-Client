@@ -1,309 +1,246 @@
-import { useState } from "react";
-import { useAuth } from "./AuthProvider";
-import { Eye, EyeOff, Mail, Lock, User, CheckCircle, AlertCircle } from "lucide-react";
+import { useState } from "react"
+import { useAuth } from "./AuthProvider"
+import { Eye, EyeOff, Mail, Lock, User, CheckCircle, AlertCircle, Zap } from "lucide-react"
 
 export default function Login() {
-  const { signIn, signUp, authError, clearError } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [localError, setLocalError] = useState("");
+  const { signIn, signUp, authError, clearError } = useAuth()
+  const [isLogin, setIsLogin] = useState(true)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+  const [localError, setLocalError] = useState("")
 
-  // Safe clear error function
   const safeClearError = () => {
-    if (clearError && typeof clearError === 'function') {
-      clearError();
-    }
-    setLocalError("");
-  };
+    if (clearError && typeof clearError === 'function') clearError()
+    setLocalError("")
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    safeClearError();
-    setSuccessMessage("");
-
+    e.preventDefault()
+    setIsLoading(true)
+    safeClearError()
+    setSuccessMessage("")
     try {
       if (isLogin) {
-        await signIn(email, password);
-        setSuccessMessage("Successfully signed in! Redirecting...");
+        await signIn(email, password)
+        setSuccessMessage("Signed in successfully!")
       } else {
-        await signUp(email, password, name);
-        setSuccessMessage("Verification email sent! Please check your inbox to confirm your account.");
+        await signUp(email, password, name)
+        setSuccessMessage("Check your inbox to confirm your account.")
       }
     } catch (err) {
-      // If authError from AuthProvider is not set, use local error
-      if (!authError) {
-        setLocalError(err.message || "Authentication failed. Please try again.");
-      }
+      if (!authError) setLocalError(err.message || "Authentication failed.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleFormChange = () => {
-    safeClearError();
-    setSuccessMessage("");
-    setIsLogin(!isLogin);
-  };
+    safeClearError()
+    setSuccessMessage("")
+    setIsLogin(!isLogin)
+  }
 
   const getErrorMessage = (error) => {
-    if (!error) return null;
-
-    const errorMessages = {
-      'Invalid login credentials': 'Invalid email or password. Please check your credentials.',
-      'Email not confirmed': 'Please verify your email address before signing in.',
-      'User already registered': 'An account with this email already exists. Please sign in instead.',
-      'Password should be at least': 'Password must be at least 6 characters long.',
-      'Too many requests': 'Too many attempts. Please wait a moment and try again.',
-      'Network error': 'Unable to connect. Please check your internet connection.',
-      'Invalid email': 'Please enter a valid email address.',
-      'Weak password': 'Password is too weak. Please use a stronger password.'
-    };
-
-    // Find matching error message
-    for (const [key, message] of Object.entries(errorMessages)) {
-      if (error.toLowerCase().includes(key.toLowerCase())) {
-        return message;
-      }
+    if (!error) return null
+    const map = {
+      'Invalid login credentials': 'Invalid email or password.',
+      'Email not confirmed': 'Please verify your email before signing in.',
+      'User already registered': 'Account already exists. Please sign in.',
+      'Password should be at least': 'Password must be at least 6 characters.',
+      'Too many requests': 'Too many attempts. Please wait.',
     }
+    for (const [key, message] of Object.entries(map)) {
+      if (error.toLowerCase().includes(key.toLowerCase())) return message
+    }
+    return error
+  }
 
-    // Default message
-    return error || 'Authentication failed. Please try again.';
-  };
+  const displayError = authError || localError
 
-  // Use either authError from provider or local error
-  const displayError = authError || localError;
+  const s = {
+    page: {
+      minHeight: '100vh', background: 'var(--bg-base)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20, position: 'relative', overflow: 'hidden',
+    },
+    blob1: {
+      position: 'absolute', width: 400, height: 400, borderRadius: '50%',
+      background: 'radial-gradient(circle, rgba(108,127,255,0.06), transparent 70%)',
+      top: '-10%', left: '-5%', pointerEvents: 'none',
+    },
+    blob2: {
+      position: 'absolute', width: 300, height: 300, borderRadius: '50%',
+      background: 'radial-gradient(circle, rgba(167,139,250,0.06), transparent 70%)',
+      bottom: '10%', right: '5%', pointerEvents: 'none',
+    },
+    card: {
+      width: '100%', maxWidth: 400, position: 'relative', zIndex: 1,
+    },
+    header: { textAlign: 'center', marginBottom: 32 },
+    iconWrap: {
+      width: 52, height: 52, borderRadius: 14,
+      background: 'linear-gradient(135deg, var(--accent), #a78bfa)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      margin: '0 auto 16px', boxShadow: '0 0 24px rgba(108,127,255,0.3)',
+    },
+    title: { fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px', marginBottom: 6 },
+    subtitle: { fontSize: 13, color: 'var(--text-muted)' },
+    form: {
+      background: 'var(--bg-surface)', border: '1px solid var(--border)',
+      borderRadius: 16, padding: 28,
+    },
+    toggleRow: {
+      display: 'flex', background: 'var(--bg-elevated)', borderRadius: 10,
+      padding: 3, marginBottom: 24, gap: 3,
+    },
+    toggleBtn: (active) => ({
+      flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+      background: active ? 'var(--accent)' : 'transparent',
+      color: active ? 'white' : 'var(--text-muted)',
+      fontSize: 13, fontWeight: 700, fontFamily: "'Syne', sans-serif",
+      boxShadow: active ? '0 0 12px rgba(108,127,255,0.3)' : 'none',
+    }),
+    devNotice: {
+      padding: '8px 12px', borderRadius: 8,
+      background: 'rgba(108,127,255,0.08)', border: '1px solid rgba(108,127,255,0.15)',
+      marginBottom: 16, fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center',
+    },
+    alertSuccess: {
+      padding: '10px 14px', borderRadius: 9, marginBottom: 16,
+      background: 'var(--success-dim)', border: '1px solid rgba(62,207,142,0.2)',
+      display: 'flex', gap: 8, alignItems: 'flex-start',
+    },
+    alertError: {
+      padding: '10px 14px', borderRadius: 9, marginBottom: 16,
+      background: 'var(--error-dim)', border: '1px solid rgba(255,94,94,0.2)',
+      display: 'flex', gap: 8, alignItems: 'flex-start',
+    },
+    label: { display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.7px' },
+    inputWrap: { position: 'relative', marginBottom: 14 },
+    inputIcon: { position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' },
+    input: {
+      width: '100%', padding: '10px 12px 10px 38px', borderRadius: 9,
+      border: '1px solid var(--border)', background: 'var(--bg-elevated)',
+      color: 'var(--text-primary)', fontFamily: "'Syne', sans-serif", fontSize: 13,
+      outline: 'none',
+    },
+    eyeBtn: {
+      position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+      background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
+    },
+    submitBtn: {
+      width: '100%', padding: '11px', borderRadius: 10, border: 'none', cursor: 'pointer',
+      background: 'var(--accent)', color: 'white',
+      fontFamily: "'Syne', sans-serif", fontSize: 14, fontWeight: 700,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+      boxShadow: '0 0 20px rgba(108,127,255,0.3)', marginTop: 4,
+      opacity: isLoading ? 0.7 : 1,
+    },
+    footer: { marginTop: 20, textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' },
+    link: { color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontFamily: "'Syne', sans-serif", fontSize: 12 },
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">API Testing Tool</h1>
-          <p className="text-gray-600">Test your APIs with confidence</p>
+    <div style={s.page}>
+      <div style={s.blob1} />
+      <div style={s.blob2} />
+      <div style={s.card}>
+        <div style={s.header}>
+          <div style={s.iconWrap}><Zap size={24} color="white" /></div>
+          <h1 style={s.title}>ApiForge</h1>
+          <p style={s.subtitle}>Test your APIs with confidence</p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="flex space-x-4 mb-6">
-            <button
-              onClick={() => handleFormChange(true)}
-              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
-                isLogin
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => handleFormChange(false)}
-              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
-                !isLogin
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Sign Up
-            </button>
+        <div style={s.form}>
+          <div style={s.toggleRow}>
+            <button onClick={() => handleFormChange()} style={s.toggleBtn(isLogin)}>Sign In</button>
+            <button onClick={() => handleFormChange()} style={s.toggleBtn(!isLogin)}>Sign Up</button>
           </div>
 
-          {/* Development Notice */}
-          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800 text-center">
-              <strong>Development Mode:</strong> Email confirmation may be disabled. Use any valid email format.
-            </p>
+          <div style={s.devNotice}>
+            Development mode · Email confirmation may be disabled
           </div>
 
-          {/* Success Message */}
           {successMessage && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-green-800">Success!</p>
-                  <p className="text-sm text-green-700 mt-1">{successMessage}</p>
-                </div>
-              </div>
+            <div style={s.alertSuccess}>
+              <CheckCircle size={15} color="#3ecf8e" style={{ flexShrink: 0, marginTop: 1 }} />
+              <span style={{ fontSize: 12, color: '#3ecf8e' }}>{successMessage}</span>
             </div>
           )}
 
-          {/* Error Message */}
           {displayError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-red-800">Authentication Error</p>
-                  <p className="text-sm text-red-700 mt-1">{getErrorMessage(displayError)}</p>
-                </div>
-              </div>
+            <div style={s.alertError}>
+              <AlertCircle size={15} color="#ff5e5e" style={{ flexShrink: 0, marginTop: 1 }} />
+              <span style={{ fontSize: 12, color: '#ff5e5e' }}>{getErrorMessage(displayError)}</span>
             </div>
           )}
 
-          {/* Email/Password Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit}>
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your full name"
-                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required={!isLogin}
-                  />
+                <label style={s.label}>Full Name</label>
+                <div style={s.inputWrap}>
+                  <User size={14} style={s.inputIcon} />
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" style={s.input} required={!isLogin} />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
+              <label style={s.label}>Email</label>
+              <div style={s.inputWrap}>
+                <Mail size={14} style={s.inputIcon} />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" style={s.input} required />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <label style={s.label}>Password</label>
+              <div style={s.inputWrap}>
+                <Lock size={14} style={s.inputIcon} />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  minLength={6}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Min. 6 characters"
+                  style={{ ...s.input, paddingRight: 38 }}
+                  required minLength={6}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={s.eyeBtn}>
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
-              {!isLogin && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Password must be at least 6 characters long
-                </p>
-              )}
             </div>
 
-            {/* Help Text */}
-            {isLogin && (
-              <div className="text-center">
-                <p className="text-xs text-gray-500">
-                  Forgot your password?{" "}
-                  <button
-                    type="button"
-                    className="text-blue-600 hover:text-blue-700 font-medium"
-                    onClick={() => alert('Password reset functionality coming soon!')}
-                  >
-                    Reset it here
-                  </button>
-                </p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-            >
+            <button type="submit" disabled={isLoading} style={s.submitBtn}>
               {isLoading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>{isLogin ? "Signing In..." : "Creating Account..."}</span>
-                </div>
-              ) : (
-                <span>{isLogin ? "Sign In" : "Create Account"}</span>
-              )}
+                <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              ) : null}
+              {isLoading ? (isLogin ? 'Signing in…' : 'Creating account…') : (isLogin ? 'Sign In' : 'Create Account')}
             </button>
           </form>
 
-          {/* Terms */}
-          {!isLogin && (
-            <div className="mt-4 text-center">
-              <p className="text-xs text-gray-500">
-                By creating an account, you agree to our{" "}
-                <button
-                  type="button"
-                  className="text-blue-600 hover:text-blue-700"
-                  onClick={() => alert('Terms of Service')}
-                >
-                  Terms of Service
-                </button>{" "}
-                and{" "}
-                <button
-                  type="button"
-                  className="text-blue-600 hover:text-blue-700"
-                  onClick={() => alert('Privacy Policy')}
-                >
-                  Privacy Policy
-                </button>
-                .
-              </p>
-            </div>
+          {isLogin && (
+            <p style={{ ...s.footer, marginTop: 12 }}>
+              <button onClick={() => alert('Coming soon!')} style={s.link}>Forgot password?</button>
+            </p>
           )}
         </div>
 
-        {/* Switch between Login/Signup */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              onClick={handleFormChange}
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              {isLogin ? "Sign up" : "Sign in"}
-            </button>
-          </p>
-        </div>
-
-        {/* Additional Help */}
-        <div className="mt-4 text-center">
-          <p className="text-xs text-gray-500">
-            Need help?{" "}
-            <button
-              type="button"
-              className="text-blue-600 hover:text-blue-700"
-              onClick={() => alert('Contact support at support@apitestingtool.com')}
-            >
-              Contact Support
-            </button>
-          </p>
-        </div>
+        <p style={s.footer}>
+          {isLogin ? "No account? " : "Already registered? "}
+          <button onClick={handleFormChange} style={s.link}>{isLogin ? "Sign up" : "Sign in"}</button>
+        </p>
       </div>
+
+      <style>{`
+        input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(108,127,255,0.12) !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
-  );
+  )
 }

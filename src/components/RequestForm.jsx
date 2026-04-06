@@ -1,313 +1,140 @@
 import React, { useState } from 'react'
-import { Send, Plus, Trash2, CheckCircle } from 'lucide-react'
+import { Send, Plus, Trash2, CheckCircle, ChevronDown } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import AuthTab from './AuthTab'
 import config from '../config'
 
+const methodColors = {
+  GET: '#3ecf8e', POST: '#6c7fff', PUT: '#f5a623', DELETE: '#ff5e5e', PATCH: '#c084fc'
+}
 
 const RequestForm = ({ onResponse, onSaveRequest, currentRequest }) => {
   const [activeTab, setActiveTab] = useState('params')
   const [method, setMethod] = useState(currentRequest?.method || 'GET')
   const [url, setUrl] = useState(currentRequest?.url || '')
-  
-  // Ensure headers is always an array
   const [headers, setHeaders] = useState(() => {
-    if (currentRequest?.headers) {
-      if (Array.isArray(currentRequest.headers)) {
-        return currentRequest.headers;
-      }
-      try {
-        return JSON.parse(currentRequest.headers);
-      } catch {
-        return [{ id: 1, key: 'Content-Type', value: 'application/json', enabled: true }];
-      }
-    }
-    return [{ id: 1, key: 'Content-Type', value: 'application/json', enabled: true }];
+    if (!currentRequest?.headers) return [{ id: 1, key: 'Content-Type', value: 'application/json', enabled: true }]
+    if (Array.isArray(currentRequest.headers)) return currentRequest.headers
+    try { return JSON.parse(currentRequest.headers) } catch { return [{ id: 1, key: 'Content-Type', value: 'application/json', enabled: true }] }
   })
-  
-  // Ensure params is always an array
   const [params, setParams] = useState(() => {
-    if (currentRequest?.params) {
-      if (Array.isArray(currentRequest.params)) {
-        return currentRequest.params;
-      }
-      try {
-        return JSON.parse(currentRequest.params);
-      } catch {
-        return [{ id: 1, key: '', value: '', enabled: true }];
-      }
-    }
-    return [{ id: 1, key: '', value: '', enabled: true }];
+    if (!currentRequest?.params) return [{ id: 1, key: '', value: '', enabled: true }]
+    if (Array.isArray(currentRequest.params)) return currentRequest.params
+    try { return JSON.parse(currentRequest.params) } catch { return [{ id: 1, key: '', value: '', enabled: true }] }
   })
-  
   const [body, setBody] = useState(currentRequest?.body || '{\n  \n}')
   const [jsonError, setJsonError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [authConfig, setAuthConfig] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('apiTesterAuthConfig') || 'null')
-    } catch {
-      return null
-    }
+    try { return JSON.parse(localStorage.getItem('apiTesterAuthConfig') || 'null') } catch { return null }
   })
 
-  // Tab configurations
   const tabs = [
-    { id: 'params', name: 'Query Parameters', enabled: true },
-    { id: 'headers', name: 'Headers', enabled: true },
-    { id: 'body', name: 'Body', enabled: method !== 'GET' },
-    { id: 'auth', name: 'Authentication', enabled: true }
+    { id: 'params', label: 'Params' },
+    { id: 'headers', label: 'Headers' },
+    { id: 'body', label: 'Body', disabled: method === 'GET' },
+    { id: 'auth', label: 'Auth' },
   ]
 
-  // Update form when currentRequest changes
   React.useEffect(() => {
     if (currentRequest) {
       setUrl(currentRequest.url || '')
       setMethod(currentRequest.method || 'GET')
-      
-      // Safely set headers
       if (currentRequest.headers) {
-        if (Array.isArray(currentRequest.headers)) {
-          setHeaders(currentRequest.headers);
-        } else {
-          try {
-            setHeaders(JSON.parse(currentRequest.headers));
-          } catch {
-            setHeaders([{ id: 1, key: 'Content-Type', value: 'application/json', enabled: true }]);
-          }
-        }
-      } else {
-        setHeaders([{ id: 1, key: 'Content-Type', value: 'application/json', enabled: true }]);
+        if (Array.isArray(currentRequest.headers)) setHeaders(currentRequest.headers)
+        else try { setHeaders(JSON.parse(currentRequest.headers)) } catch { setHeaders([{ id: 1, key: 'Content-Type', value: 'application/json', enabled: true }]) }
       }
-      
-      // Safely set params
       if (currentRequest.params) {
-        if (Array.isArray(currentRequest.params)) {
-          setParams(currentRequest.params);
-        } else {
-          try {
-            setParams(JSON.parse(currentRequest.params));
-          } catch {
-            setParams([{ id: 1, key: '', value: '', enabled: true }]);
-          }
-        }
-      } else {
-        setParams([{ id: 1, key: '', value: '', enabled: true }]);
+        if (Array.isArray(currentRequest.params)) setParams(currentRequest.params)
+        else try { setParams(JSON.parse(currentRequest.params)) } catch { setParams([{ id: 1, key: '', value: '', enabled: true }]) }
       }
-      
       setBody(currentRequest.body || '{\n  \n}')
     }
   }, [currentRequest])
 
-  // Update body tab enabled state when method changes
   React.useEffect(() => {
-    if (method === 'GET' && activeTab === 'body') {
-      setActiveTab('params')
-    }
+    if (method === 'GET' && activeTab === 'body') setActiveTab('params')
   }, [method, activeTab])
 
-  // Header management
-  const addHeader = () => {
-    setHeaders([...headers, { id: Date.now(), key: '', value: '', enabled: true }])
-  }
+  const addHeader = () => setHeaders([...headers, { id: Date.now(), key: '', value: '', enabled: true }])
+  const removeHeader = (id) => { if (headers.length > 1) setHeaders(headers.filter(h => h.id !== id)) }
+  const updateHeader = (id, field, value) => setHeaders(headers.map(h => h.id === id ? { ...h, [field]: value } : h))
+  const toggleHeader = (id) => setHeaders(headers.map(h => h.id === id ? { ...h, enabled: !h.enabled } : h))
+  const addParam = () => setParams([...params, { id: Date.now(), key: '', value: '', enabled: true }])
+  const removeParam = (id) => { if (params.length > 1) setParams(params.filter(p => p.id !== id)) }
+  const updateParam = (id, field, value) => setParams(params.map(p => p.id === id ? { ...p, [field]: value } : p))
+  const toggleParam = (id) => setParams(params.map(p => p.id === id ? { ...p, enabled: !p.enabled } : p))
 
-  const removeHeader = (id) => {
-    if (headers.length > 1) {
-      setHeaders(headers.filter(header => header.id !== id))
-    }
-  }
-
-  const updateHeader = (id, field, value) => {
-    setHeaders(headers.map(header => 
-      header.id === id ? { ...header, [field]: value } : header
-    ))
-  }
-
-  const toggleHeader = (id) => {
-    setHeaders(headers.map(header => 
-      header.id === id ? { ...header, enabled: !header.enabled } : header
-    ))
-  }
-
-  // Params management
-  const addParam = () => {
-    setParams([...params, { id: Date.now(), key: '', value: '', enabled: true }])
-  }
-
-  const removeParam = (id) => {
-    if (params.length > 1) {
-      setParams(params.filter(param => param.id !== id))
-    }
-  }
-
-  const updateParam = (id, field, value) => {
-    setParams(params.map(param => 
-      param.id === id ? { ...param, [field]: value } : param
-    ))
-  }
-
-  const toggleParam = (id) => {
-    setParams(params.map(param => 
-      param.id === id ? { ...param, enabled: !param.enabled } : param
-    ))
-  }
-
-  // Body validation
   const validateJSON = (jsonString) => {
     try {
-      if (jsonString.trim()) {
-        JSON.parse(jsonString)
-      }
+      if (jsonString.trim()) JSON.parse(jsonString)
       setJsonError('')
       return true
-    } catch (error) {
-      setJsonError('Invalid JSON format: ' + error.message)
+    } catch (e) {
+      setJsonError(e.message)
       return false
     }
   }
 
-  const handleBodyChange = (value) => {
-    setBody(value)
-    if (method !== 'GET') {
-      validateJSON(value)
-    }
-  }
-
-  // Build URL with parameters - with safe array checking
   const buildUrlWithParams = () => {
     if (!url) return url
-    
     try {
       const urlObj = new URL(url)
-      
-      // Ensure params is an array before using .some() or .filter()
-      const enabledParams = Array.isArray(params) 
-        ? params.filter(param => param.enabled && param.key && param.key.trim())
-        : []
-      
-      // Clear existing search params and add new ones
       urlObj.search = ''
-      enabledParams.forEach(param => {
-        if (param.key && param.value) {
-          urlObj.searchParams.append(param.key, param.value)
-        }
-      })
-      
+      const enabledParams = Array.isArray(params) ? params.filter(p => p.enabled && p.key?.trim()) : []
+      enabledParams.forEach(p => { if (p.key && p.value) urlObj.searchParams.append(p.key, p.value) })
       return urlObj.toString()
-    } catch (error) {
-      // If URL is not valid yet, just return the original
-      return url
-    }
+    } catch { return url }
   }
 
-  // Prepare request data for proxy
-  const prepareRequestData = () => {
-    // Safely filter headers
-    const enabledHeaders = Array.isArray(headers) 
-      ? headers
-          .filter(header => header.enabled && header.key && header.key.trim())
-          .reduce((acc, header) => {
-            acc[header.key] = header.value
-            return acc
-          }, {})
-      : {}
-
-    // Add authentication headers
-    if (authConfig && authConfig.type !== 'none') {
-      switch (authConfig.type) {
-        case 'basic':
-          if (authConfig.username && authConfig.password) {
-            const credentials = btoa(`${authConfig.username}:${authConfig.password}`)
-            enabledHeaders['Authorization'] = `Basic ${credentials}`
-          }
-          break
-        case 'bearer':
-          if (authConfig.token) {
-            enabledHeaders['Authorization'] = `Bearer ${authConfig.token.trim()}`
-          }
-          break
-        // For custom, user should add headers manually in Headers tab
-      }
-    }
-
-    let requestBody = null
-    if (method !== 'GET' && body.trim()) {
-      try {
-        requestBody = JSON.parse(body)
-      } catch (error) {
-        throw new Error('Invalid JSON in request body')
-      }
-    }
-
-    const finalUrl = buildUrlWithParams()
-
-    return {
-      url: finalUrl,
-      method: method.toUpperCase(),
-      headers: enabledHeaders,
-      body: requestBody,
-      timeout: 30000,
-      auth: authConfig // Pass auth config to backend if needed
-    }
-  }
-
-  // Send request to proxy
   const handleSend = async () => {
-    if (!url.trim()) {
-      toast.error('Please enter a URL')
-      return
-    }
-
-    // Validate URL format
-    try {
-      new URL(url)
-    } catch (error) {
-      toast.error('Please enter a valid URL (include http:// or https://)')
-      return
-    }
-
-    if (method !== 'GET' && body.trim()) {
-      if (!validateJSON(body)) {
-        toast.error('Please fix JSON errors in request body')
-        return
-      }
-    }
+    if (!url.trim()) { toast.error('Enter a URL'); return }
+    try { new URL(url) } catch { toast.error('Enter a valid URL (include https://)'); return }
+    if (method !== 'GET' && body.trim() && !validateJSON(body)) { toast.error('Fix JSON errors first'); return }
 
     setIsLoading(true)
-    
     try {
-      const requestData = prepareRequestData()
-      
-      console.log('Sending request to proxy:', requestData)
+      const enabledHeaders = Array.isArray(headers)
+        ? headers.filter(h => h.enabled && h.key?.trim()).reduce((acc, h) => { acc[h.key] = h.value; return acc }, {})
+        : {}
+
+      if (authConfig && authConfig.type !== 'none') {
+        if (authConfig.type === 'basic' && authConfig.username && authConfig.password) {
+          enabledHeaders['Authorization'] = `Basic ${btoa(`${authConfig.username}:${authConfig.password}`)}`
+        } else if (authConfig.type === 'bearer' && authConfig.token) {
+          enabledHeaders['Authorization'] = `Bearer ${authConfig.token.trim()}`
+        }
+      }
+
+      let requestBody = null
+      if (method !== 'GET' && body.trim()) {
+        try { requestBody = JSON.parse(body) } catch { throw new Error('Invalid JSON body') }
+      }
+
+      const requestData = {
+        url: buildUrlWithParams(),
+        method: method.toUpperCase(),
+        headers: enabledHeaders,
+        body: requestBody,
+        timeout: 30000,
+        auth: authConfig
+      }
 
       const startTime = Date.now()
-     const response = await fetch(`${config.apiUrl}/api/proxy`, {
+      const response = await fetch(`${config.apiUrl}/api/proxy`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),
       })
-
       const result = await response.json()
-      const endTime = Date.now()
-      
-      console.log('Proxy response:', result)
+      const finalResult = { ...result, duration: result.duration || (Date.now() - startTime) }
 
-      // Add duration to result if not present
-      const finalResult = {
-        ...result,
-        duration: result.duration || (endTime - startTime)
-      }
-      
       if (response.ok) {
         onResponse(finalResult)
-        
-        // Save to history
         if (onSaveRequest) {
           onSaveRequest({
-            url: url, // Original URL without params
-            method: method,
+            url,
+            method,
             headers: JSON.stringify(Array.isArray(headers) ? headers.filter(h => h.enabled && h.key) : []),
             body: method !== 'GET' ? body : null,
             params: JSON.stringify(Array.isArray(params) ? params.filter(p => p.enabled && p.key) : []),
@@ -317,423 +144,247 @@ const RequestForm = ({ onResponse, onSaveRequest, currentRequest }) => {
             duration: finalResult.duration
           })
         }
-
         if (finalResult.status >= 200 && finalResult.status < 300) {
-          toast.success(`✅ ${finalResult.status} - Request completed in ${finalResult.duration}ms`)
+          toast.success(`${finalResult.status} · ${finalResult.duration}ms`)
         } else {
-          toast.error(`❌ ${finalResult.status} - Request completed in ${finalResult.duration}ms`)
+          toast.error(`${finalResult.status} · ${finalResult.duration}ms`)
         }
       } else {
-        // Proxy itself returned an error
-        onResponse({
-          status: response.status,
-          statusText: response.statusText,
-          headers: {},
-          data: { error: result.error || 'Proxy request failed' },
-          duration: endTime - startTime
-        })
-        toast.error(`Proxy error: ${result.error || 'Request failed'}`)
+        onResponse({ status: response.status, statusText: response.statusText, headers: {}, data: { error: result.error || 'Proxy error' }, duration: Date.now() - startTime })
+        toast.error(result.error || 'Request failed')
       }
     } catch (error) {
-      console.error('Request error:', error)
-      onResponse({
-        status: 0,
-        statusText: 'Error',
-        headers: {},
-        data: { 
-          error: error.message || 'Network error',
-          details: 'Check if the backend server is running on port 3001'
-        },
-        duration: 0
-      })
-      toast.error('Failed to send request. Check backend connection.')
+      onResponse({ status: 0, statusText: 'Error', headers: {}, data: { error: error.message }, duration: 0 })
+      toast.error('Network error — check backend')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Format JSON
-  const formatJSON = () => {
-    try {
-      const parsed = JSON.parse(body)
-      setBody(JSON.stringify(parsed, null, 2))
-      setJsonError('')
-      toast.success('JSON formatted successfully')
-    } catch (error) {
-      setJsonError('Cannot format invalid JSON')
-      toast.error('Cannot format invalid JSON')
-    }
+  const s = {
+    root: { height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-base)' },
+    urlBar: {
+      padding: '14px 16px',
+      background: 'var(--bg-surface)',
+      borderBottom: '1px solid var(--border)',
+      display: 'flex', gap: 10, alignItems: 'center',
+      flexWrap: 'wrap',
+    },
+    methodSelect: {
+      padding: '9px 10px', borderRadius: 9, border: '1px solid var(--border)',
+      background: 'var(--bg-elevated)', color: methodColors[method] || 'var(--text-primary)',
+      fontFamily: "'DM Mono', monospace", fontSize: 13, fontWeight: 700,
+      cursor: 'pointer', outline: 'none', minWidth: 90,
+      appearance: 'none', WebkitAppearance: 'none',
+      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8fa8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+      backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
+      paddingRight: 28,
+    },
+    urlInput: {
+      flex: 1, minWidth: 200, padding: '9px 13px', borderRadius: 9,
+      border: '1px solid var(--border)', background: 'var(--bg-elevated)',
+      color: 'var(--text-primary)', fontFamily: "'DM Mono', monospace", fontSize: 12,
+      outline: 'none',
+    },
+    sendBtn: {
+      padding: '9px 18px', borderRadius: 9, border: 'none', cursor: 'pointer',
+      background: isLoading ? 'var(--accent-dim)' : 'var(--accent)',
+      color: 'white', fontFamily: "'Syne', sans-serif", fontSize: 13, fontWeight: 700,
+      display: 'flex', alignItems: 'center', gap: 7, transition: 'all 0.15s',
+      whiteSpace: 'nowrap', opacity: isLoading ? 0.7 : 1,
+      boxShadow: isLoading ? 'none' : '0 0 16px rgba(108,127,255,0.3)',
+    },
+    tabBar: {
+      display: 'flex', gap: 2, padding: '8px 16px',
+      background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)',
+    },
+    tab: (active, disabled) => ({
+      padding: '6px 14px', borderRadius: 7, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+      background: active ? 'var(--bg-elevated)' : 'transparent',
+      color: disabled ? 'var(--text-muted)' : active ? 'var(--accent)' : 'var(--text-secondary)',
+      fontSize: 12, fontWeight: 600, fontFamily: "'Syne', sans-serif",
+      borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent',
+      opacity: disabled ? 0.4 : 1,
+    }),
+    tabContent: { flex: 1, overflowY: 'auto', padding: '16px' },
+    tableHeader: {
+      display: 'grid', gridTemplateColumns: '32px 1fr 1fr 32px', gap: 8,
+      padding: '0 4px 8px', fontSize: 10, fontWeight: 700,
+      color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px',
+    },
+    tableRow: {
+      display: 'grid', gridTemplateColumns: '32px 1fr 1fr 32px', gap: 8,
+      padding: '6px 4px', borderRadius: 8, alignItems: 'center',
+      background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+      marginBottom: 6,
+    },
+    input: {
+      padding: '7px 10px', borderRadius: 7, border: '1px solid var(--border)',
+      background: 'var(--bg-surface)', color: 'var(--text-primary)',
+      fontFamily: "'DM Mono', monospace", fontSize: 12, outline: 'none', width: '100%',
+    },
+    checkbox: { width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer', margin: 'auto' },
+    removeBtn: {
+      background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6,
+      padding: 4, margin: 'auto',
+    },
+    addBtn: {
+      display: 'flex', alignItems: 'center', gap: 6, marginTop: 8,
+      padding: '7px 12px', borderRadius: 8, border: '1px dashed var(--border)',
+      background: 'none', color: 'var(--text-muted)', cursor: 'pointer',
+      fontSize: 12, fontWeight: 600, fontFamily: "'Syne', sans-serif",
+    },
+    bodyArea: {
+      width: '100%', height: 280, padding: '12px 14px',
+      borderRadius: 10, border: '1px solid var(--border)',
+      background: 'var(--bg-elevated)', color: 'var(--text-primary)',
+      fontFamily: "'DM Mono', monospace", fontSize: 12, lineHeight: 1.6,
+      resize: 'vertical', outline: 'none',
+    },
+    sectionTitle: { fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 12 },
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
-      {/* Method and URL Bar */}
-      <div className="p-6 bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex flex-col space-y-4 lg:flex-row lg:space-y-0 lg:space-x-4 lg:items-start">
-          {/* Method Selector */}
-          <div className="flex-shrink-0">
-            <select 
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              className="w-full lg:w-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium text-gray-700 shadow-sm transition-colors"
-            >
-              <option value="GET">GET</option>
-              <option value="POST">POST</option>
-              <option value="PUT">PUT</option>
-              <option value="DELETE">DELETE</option>
-              <option value="PATCH">PATCH</option>
-            </select>
-          </div>
+    <div style={s.root}>
+      {/* URL Bar */}
+      <div style={s.urlBar}>
+        <select value={method} onChange={e => setMethod(e.target.value)} style={s.methodSelect}>
+          {['GET','POST','PUT','DELETE','PATCH'].map(m => (
+            <option key={m} value={m} style={{ color: methodColors[m], background: '#1a1d27' }}>{m}</option>
+          ))}
+        </select>
+        <input
+          type="text"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSend()}
+          placeholder="https://api.example.com/endpoint"
+          style={s.urlInput}
+        />
+        <button onClick={handleSend} disabled={isLoading} style={s.sendBtn}>
+          {isLoading
+            ? <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            : <Send size={14} />
+          }
+          {isLoading ? 'Sending…' : 'Send'}
+        </button>
+      </div>
 
-          {/* URL Input */}
-          <div className="flex-1 min-w-0">
-            <div className="relative">
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter API URL (e.g., https://jsonplaceholder.typicode.com/posts)"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm placeholder-gray-400 shadow-sm transition-colors"
-              />
+      {/* Tab Bar */}
+      <div style={s.tabBar}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => !t.disabled && setActiveTab(t.id)} style={s.tab(activeTab === t.id, t.disabled)}>
+            {t.label}
+            {t.id === 'body' && method === 'GET' && <span style={{ fontSize: 9, marginLeft: 4, opacity: 0.5 }}>N/A</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div style={s.tabContent}>
+        {/* Params */}
+        {activeTab === 'params' && (
+          <div>
+            <div style={s.sectionTitle}>Query Parameters</div>
+            <div style={s.tableHeader}>
+              <div style={{ textAlign: 'center' }}>On</div>
+              <div>Key</div>
+              <div>Value</div>
+              <div></div>
             </div>
-            
-            {/* Safe check for params before using .some() */}
-            {Array.isArray(params) && params.some(param => param.enabled && param.key) && (
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <details className="text-sm">
-                  <summary className="cursor-pointer font-medium text-blue-700 hover:text-blue-800 flex items-center">
-                    <span>Generated URL with Parameters</span>
-                  </summary>
-                  <div className="mt-2 p-3 bg-white rounded border border-blue-100">
-                    <code className="text-xs text-gray-700 break-all font-mono">
-                      {buildUrlWithParams()}
-                    </code>
-                  </div>
-                </details>
+            {Array.isArray(params) && params.map(param => (
+              <div key={param.id} style={s.tableRow}>
+                <input type="checkbox" checked={param.enabled} onChange={() => toggleParam(param.id)} style={s.checkbox} />
+                <input type="text" placeholder="key" value={param.key} onChange={e => updateParam(param.id, 'key', e.target.value)} style={s.input} />
+                <input type="text" placeholder="value" value={param.value} onChange={e => updateParam(param.id, 'value', e.target.value)} style={s.input} />
+                <button onClick={() => removeParam(param.id)} style={s.removeBtn}><Trash2 size={13} /></button>
+              </div>
+            ))}
+            <button onClick={addParam} style={s.addBtn}><Plus size={13} /> Add Parameter</button>
+            {Array.isArray(params) && params.some(p => p.enabled && p.key) && (
+              <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Generated URL</div>
+                <code style={{ fontSize: 11, color: 'var(--accent)', fontFamily: "'DM Mono', monospace", wordBreak: 'break-all' }}>{buildUrlWithParams()}</code>
               </div>
             )}
           </div>
+        )}
 
-          {/* Send Button */}
-          <div className="flex-shrink-0">
-            <button
-              onClick={handleSend}
-              disabled={isLoading}
-              className="w-full lg:w-auto px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm font-medium"
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-              <span className="font-medium">{isLoading ? 'Sending...' : 'Send Request'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs for Params, Headers, Body, Auth */}
-      <div className="flex-1 flex flex-col">
-        <div className="border-b border-gray-200 bg-white shadow-sm">
-          <div className="flex overflow-x-auto">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => tab.enabled && setActiveTab(tab.id)}
-                disabled={!tab.enabled}
-                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'text-blue-600 border-blue-600 bg-blue-50'
-                    : tab.enabled
-                    ? 'text-gray-600 hover:text-gray-800 border-transparent hover:border-gray-300 hover:bg-gray-50'
-                    : 'text-gray-400 cursor-not-allowed border-transparent'
-                }`}
-              >
-                {tab.name}
-                {tab.id === 'body' && method === 'GET' && (
-                  <span className="text-xs text-gray-400 ml-2">(disabled for GET)</span>
-                )}
-              </button>
+        {/* Headers */}
+        {activeTab === 'headers' && (
+          <div>
+            <div style={s.sectionTitle}>Request Headers</div>
+            <div style={s.tableHeader}>
+              <div style={{ textAlign: 'center' }}>On</div>
+              <div>Header</div>
+              <div>Value</div>
+              <div></div>
+            </div>
+            {Array.isArray(headers) && headers.map(header => (
+              <div key={header.id} style={s.tableRow}>
+                <input type="checkbox" checked={header.enabled} onChange={() => toggleHeader(header.id)} style={s.checkbox} />
+                <input type="text" placeholder="Content-Type" value={header.key} onChange={e => updateHeader(header.id, 'key', e.target.value)} style={s.input} />
+                <input type="text" placeholder="application/json" value={header.value} onChange={e => updateHeader(header.id, 'value', e.target.value)} style={s.input} />
+                <button onClick={() => removeHeader(header.id)} style={s.removeBtn}><Trash2 size={13} /></button>
+              </div>
             ))}
+            <button onClick={addHeader} style={s.addBtn}><Plus size={13} /> Add Header</button>
           </div>
-        </div>
+        )}
 
-        {/* Tab Content */}
-        <div className="flex-1 overflow-auto p-6">
-          {/* Params Tab */}
-          {activeTab === 'params' && (
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-200 bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800">Query Parameters</h3>
-                      <p className="text-sm text-gray-600 mt-1">Parameters will be automatically appended to the URL as query strings</p>
-                    </div>
-                    <button
-                      onClick={addParam}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 hover:border-blue-300 transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Add Parameter</span>
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <div className="space-y-4">
-                    {/* Header Row */}
-                    <div className="grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider px-2">
-                      <div className="col-span-1 text-center">Status</div>
-                      <div className="col-span-5">Parameter Name</div>
-                      <div className="col-span-5">Value</div>
-                      <div className="col-span-1"></div>
-                    </div>
-                    
-                    {/* Parameters List */}
-                    {Array.isArray(params) && params.map((param) => (
-                      <div key={param.id} className="grid grid-cols-12 gap-4 items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="col-span-1 flex justify-center">
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={param.enabled}
-                              onChange={() => toggleParam(param.id)}
-                              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-span-5">
-                          <input
-                            type="text"
-                            placeholder="e.g., page, limit, sort"
-                            value={param.key}
-                            onChange={(e) => updateParam(param.id, 'key', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-mono transition-colors"
-                          />
-                        </div>
-                        <div className="col-span-5">
-                          <input
-                            type="text"
-                            placeholder="e.g., 1, 20, name"
-                            value={param.value}
-                            onChange={(e) => updateParam(param.id, 'value', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-mono transition-colors"
-                          />
-                        </div>
-                        <div className="col-span-1 flex justify-center">
-                          <button
-                            onClick={() => removeParam(param.id)}
-                            className="p-3 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
-                            title="Remove parameter"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        {/* Body */}
+        {activeTab === 'body' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={s.sectionTitle}>Request Body</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => { try { const p = JSON.parse(body); setBody(JSON.stringify(p, null, 2)); setJsonError(''); toast.success('Formatted') } catch { toast.error('Invalid JSON') } }}
+                  style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: "'Syne', sans-serif" }}
+                >
+                  Beautify
+                </button>
+                <button
+                  onClick={() => { try { const p = JSON.parse(body); setBody(JSON.stringify(p)); setJsonError(''); } catch { toast.error('Invalid JSON') } }}
+                  style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: "'Syne', sans-serif" }}
+                >
+                  Minify
+                </button>
               </div>
             </div>
-          )}
-
-          {/* Headers Tab */}
-          {activeTab === 'headers' && (
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-200 bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800">Request Headers</h3>
-                      <p className="text-sm text-gray-600 mt-1">Custom HTTP headers for your API request</p>
-                    </div>
-                    <button
-                      onClick={addHeader}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 hover:border-blue-300 transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Add Header</span>
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <div className="space-y-4">
-                    {/* Header Row */}
-                    <div className="grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider px-2">
-                      <div className="col-span-1 text-center">Status</div>
-                      <div className="col-span-5">Header Name</div>
-                      <div className="col-span-5">Value</div>
-                      <div className="col-span-1"></div>
-                    </div>
-                    
-                    {/* Headers List */}
-                    {Array.isArray(headers) && headers.map((header) => (
-                      <div key={header.id} className="grid grid-cols-12 gap-4 items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="col-span-1 flex justify-center">
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={header.enabled}
-                              onChange={() => toggleHeader(header.id)}
-                              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-span-5">
-                          <input
-                            type="text"
-                            placeholder="e.g., Content-Type, Authorization"
-                            value={header.key}
-                            onChange={(e) => updateHeader(header.id, 'key', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-mono transition-colors"
-                          />
-                        </div>
-                        <div className="col-span-5">
-                          <input
-                            type="text"
-                            placeholder="e.g., application/json, Bearer token..."
-                            value={header.value}
-                            onChange={(e) => updateHeader(header.id, 'value', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-mono transition-colors"
-                          />
-                        </div>
-                        <div className="col-span-1 flex justify-center">
-                          <button
-                            onClick={() => removeHeader(header.id)}
-                            className="p-3 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
-                            title="Remove header"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            <textarea
+              value={body}
+              onChange={e => { setBody(e.target.value); validateJSON(e.target.value) }}
+              style={s.bodyArea}
+              placeholder={'{\n  "key": "value"\n}'}
+            />
+            {jsonError && (
+              <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--error-dim)', border: '1px solid rgba(255,94,94,0.2)', color: 'var(--error)', fontSize: 12, fontFamily: "'DM Mono', monospace" }}>
+                ✗ {jsonError}
               </div>
-            </div>
-          )}
-
-          {/* Body Tab */}
-          {activeTab === 'body' && (
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-200 bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800">Request Body</h3>
-                      <p className="text-sm text-gray-600 mt-1">JSON payload for POST, PUT, PATCH requests</p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={formatJSON}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 rounded-lg border border-gray-300 hover:border-gray-400 transition-colors"
-                      >
-                        Format JSON
-                      </button>
-                      <select className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700">
-                        <option>JSON</option>
-                        <option disabled>Text</option>
-                        <option disabled>XML</option>
-                        <option disabled>Form Data</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <div className="relative">
-                    <textarea
-                      value={body}
-                      onChange={(e) => handleBodyChange(e.target.value)}
-                      className="w-full h-96 px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-none shadow-sm transition-colors"
-                      placeholder='Enter JSON request body, e.g., {"name": "John", "email": "john@example.com"}'
-                    />
-                    
-                    {/* JSON Syntax Helper */}
-                    {body.trim() && (
-                      <div className="absolute bottom-4 right-4 flex space-x-2">
-                        <button
-                          onClick={() => {
-                            try {
-                              const parsed = JSON.parse(body);
-                              setBody(JSON.stringify(parsed, null, 2));
-                              setJsonError('');
-                            } catch (e) {
-                              setJsonError('Invalid JSON format');
-                            }
-                          }}
-                          className="px-3 py-2 text-xs font-medium bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors border border-blue-200"
-                        >
-                          Beautify
-                        </button>
-                        <button
-                          onClick={() => {
-                            try {
-                              const parsed = JSON.parse(body);
-                              setBody(JSON.stringify(parsed));
-                              setJsonError('');
-                            } catch (e) {
-                              setJsonError('Invalid JSON format');
-                            }
-                          }}
-                          className="px-3 py-2 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors border border-gray-300"
-                        >
-                          Minify
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Error and Validation States */}
-                  <div className="mt-4">
-                    {jsonError && (
-                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                        <div className="font-medium">JSON Error</div>
-                        <div className="mt-1">{jsonError}</div>
-                      </div>
-                    )}
-                    
-                    {body.trim() && !jsonError && (
-                      <div className="flex items-center space-x-2 text-green-600 text-sm font-medium p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <CheckCircle className="w-5 h-5" />
-                        <span>Valid JSON format</span>
-                      </div>
-                    )}
-                    
-                    {!body.trim() && (
-                      <div className="text-center py-8 text-gray-500">
-                        <div className="text-sm">Start typing your JSON request body...</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+            )}
+            {body.trim() && !jsonError && (
+              <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--success-dim)', border: '1px solid rgba(62,207,142,0.2)', color: 'var(--success)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <CheckCircle size={13} /> Valid JSON
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
-          {/* Auth Tab */}
-          {activeTab === 'auth' && (
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-200 bg-gray-50">
-                  <h3 className="text-lg font-semibold text-gray-800">Authentication</h3>
-                  <p className="text-sm text-gray-600 mt-1">Configure authentication for your API requests</p>
-                </div>
-                <div className="p-6">
-                  <AuthTab 
-                    onAuthSuccess={setAuthConfig}
-                    authConfig={authConfig}
-                    setAuthConfig={setAuthConfig}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Auth */}
+        {activeTab === 'auth' && (
+          <div>
+            <div style={s.sectionTitle}>Authentication</div>
+            <AuthTab onAuthSuccess={setAuthConfig} authConfig={authConfig} setAuthConfig={setAuthConfig} />
+          </div>
+        )}
       </div>
+
+      <style>{`
+        input[type="text"]:focus, textarea:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 2px rgba(108,127,255,0.15) !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   )
 }

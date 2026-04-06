@@ -1,54 +1,65 @@
-import { useAuth } from "./AuthProvider";
-import { LogOut, User, Settings, Shield } from "lucide-react";
+import { useAuth } from "./AuthProvider"
+import { LogOut, User, Settings, Shield } from "lucide-react"
 
 export default function UserProfile() {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useAuth()
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Failed to sign out:", error);
-    }
-  };
+    try { await signOut() } catch (error) { console.error("Sign out failed:", error) }
+  }
 
-  if (!user) return null;
+  if (!user) return null
+
+  const displayName = user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+
+  const s = {
+    root: {
+      padding: '10px 12px',
+      borderTop: '1px solid var(--border)',
+      background: 'var(--bg-surface)',
+      flexShrink: 0,
+    },
+    userRow: { display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 },
+    avatar: {
+      width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+      background: 'linear-gradient(135deg, var(--accent), #a78bfa)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 12, fontWeight: 800, color: 'white',
+    },
+    name: { fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    email: { fontSize: 10, color: 'var(--text-muted)', fontFamily: "'DM Mono', monospace", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    actions: { display: 'flex', gap: 4 },
+    btn: {
+      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+      padding: '6px 8px', borderRadius: 7, border: '1px solid var(--border)',
+      background: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
+      color: 'var(--text-muted)', fontFamily: "'Syne', sans-serif",
+    },
+    signOutBtn: {
+      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+      padding: '6px 8px', borderRadius: 7, border: '1px solid rgba(255,94,94,0.2)',
+      background: 'rgba(255,94,94,0.05)', cursor: 'pointer', fontSize: 11, fontWeight: 600,
+      color: 'var(--error)', fontFamily: "'Syne', sans-serif",
+    },
+  }
 
   return (
-    <div className="p-4 border-t border-gray-200">
-      <div className="flex items-center space-x-3 mb-3">
-        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-          <User className="w-5 h-5 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-800 truncate">
-            {user.name || "User"}
-          </p>
-          <p className="text-xs text-gray-500 truncate">
-            {user.email}
-          </p>
+    <div style={s.root}>
+      <div style={s.userRow}>
+        <div style={s.avatar}>{initials}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={s.name}>{displayName}</div>
+          <div style={s.email}>{user.email}</div>
         </div>
       </div>
-
-      <div className="space-y-1">
-        <button className="w-full flex items-center space-x-2 p-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors">
-          <Settings className="w-4 h-4" />
-          <span>Settings</span>
-        </button>
-        
-        <button className="w-full flex items-center space-x-2 p-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors">
-          <Shield className="w-4 h-4" />
-          <span>Privacy & Security</span>
-        </button>
-        
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center space-x-2 p-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Sign Out</span>
+      <div style={s.actions}>
+        <button style={s.btn} title="Settings"><Settings size={12} /></button>
+        <button style={s.btn} title="Privacy"><Shield size={12} /></button>
+        <button onClick={handleSignOut} style={s.signOutBtn}>
+          <LogOut size={12} /> Sign out
         </button>
       </div>
     </div>
-  );
+  )
 }

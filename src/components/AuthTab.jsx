@@ -14,231 +14,164 @@ const AuthTab = ({ onAuthSuccess, authConfig, setAuthConfig }) => {
     { value: 'none', label: 'No Auth' },
     { value: 'basic', label: 'Basic Auth' },
     { value: 'bearer', label: 'Bearer Token' },
-   
-    { value: 'custom', label: 'Custom Headers' }
+    { value: 'custom', label: 'Custom Headers' },
   ]
 
   const handleSaveAuth = () => {
-    const config = {
-      type: authType,
-      username,
-      password,
-      token,
-      timestamp: Date.now()
-    }
-    
+    const config = { type: authType, username, password, token, timestamp: Date.now() }
     setAuthConfig(config)
-    
-    // Save to localStorage
     localStorage.setItem('apiTesterAuthConfig', JSON.stringify(config))
-    toast.success('Authentication configuration saved')
+    toast.success('Auth saved')
   }
 
   const handleTestAuth = async () => {
-    if (!authConfig) {
-      toast.error('Please save authentication configuration first')
-      return
-    }
-
+    if (!authConfig) { toast.error('Save auth config first'); return }
     setIsTesting(true)
     try {
-      const testResult = await testAuthentication(authConfig)
-      
-      if (testResult.success) {
-        toast.success('✅ Authentication test successful!')
+      await new Promise(r => setTimeout(r, 800))
+      if ((authConfig.type === 'basic' && authConfig.username && authConfig.password) ||
+          (authConfig.type === 'bearer' && authConfig.token)) {
+        toast.success('Auth configured ✓')
         onAuthSuccess(authConfig)
       } else {
-        toast.error(`❌ Authentication failed: ${testResult.error}`)
+        toast.error('Invalid configuration')
       }
-    } catch (error) {
-      toast.error(`❌ Test failed: ${error.message}`)
     } finally {
       setIsTesting(false)
     }
   }
 
-  const testAuthentication = async (config) => {
-    // This would be your actual authentication test logic
-    // For now, we'll simulate a test
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        if (config.type === 'basic' && config.username && config.password) {
-          resolve({ success: true, message: 'Basic auth configured' })
-        } else if (config.type === 'bearer' && config.token) {
-          resolve({ success: true, message: 'Bearer token configured' })
-        } else if (config.type === 'medimapper' && config.token) {
-          resolve({ success: true, message: 'MediMapper token configured' })
-        } else {
-          resolve({ success: false, error: 'Invalid configuration' })
-        }
-      }, 1000)
-    })
+  const s = {
+    typeGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 18 },
+    typeBtn: (active) => ({
+      padding: '8px 12px', borderRadius: 8, border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+      background: active ? 'var(--accent-dim)' : 'var(--bg-elevated)',
+      color: active ? 'var(--accent)' : 'var(--text-secondary)',
+      fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'Syne', sans-serif",
+    }),
+    section: {
+      padding: '14px', borderRadius: 10, border: '1px solid var(--border)',
+      background: 'var(--bg-elevated)', marginBottom: 14,
+    },
+    sectionTitle: { fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 },
+    label: { fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.7px', marginBottom: 5, display: 'block' },
+    inputWrap: { position: 'relative', marginBottom: 10 },
+    inputIcon: { position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' },
+    input: {
+      width: '100%', padding: '8px 10px 8px 32px', borderRadius: 8,
+      border: '1px solid var(--border)', background: 'var(--bg-surface)',
+      color: 'var(--text-primary)', fontFamily: "'DM Mono', monospace", fontSize: 12, outline: 'none',
+    },
+    textarea: {
+      width: '100%', padding: '8px 10px', borderRadius: 8,
+      border: '1px solid var(--border)', background: 'var(--bg-surface)',
+      color: 'var(--text-primary)', fontFamily: "'DM Mono', monospace", fontSize: 12, outline: 'none',
+      resize: 'none', lineHeight: 1.6,
+    },
+    actionRow: { display: 'flex', gap: 8, marginTop: 4 },
+    saveBtn: {
+      display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+      borderRadius: 8, border: 'none', cursor: 'pointer',
+      background: 'var(--accent)', color: 'white',
+      fontSize: 12, fontWeight: 700, fontFamily: "'Syne', sans-serif",
+    },
+    testBtn: {
+      display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+      borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer',
+      background: 'var(--bg-elevated)', color: 'var(--text-secondary)',
+      fontSize: 12, fontWeight: 700, fontFamily: "'Syne', sans-serif",
+      opacity: isTesting ? 0.6 : 1,
+    },
+    statusChip: {
+      padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(62,207,142,0.2)',
+      background: 'rgba(62,207,142,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    },
   }
 
   return (
-    <div className="space-y-6">
-      {/* Auth Type Selection */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Authentication Type
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          {authTypes.map((type) => (
-            <button
-              key={type.value}
-              onClick={() => setAuthType(type.value)}
-              className={`p-3 border rounded-lg text-sm font-medium transition-colors ${
-                authType === type.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
-              }`}
-            >
-              {type.label}
-            </button>
-          ))}
-        </div>
+    <div>
+      <div style={s.typeGrid}>
+        {authTypes.map(t => (
+          <button key={t.value} onClick={() => setAuthType(t.value)} style={s.typeBtn(authType === t.value)}>
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* Basic Auth Fields */}
       {authType === 'basic' && (
-        <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h4 className="font-medium text-blue-800 flex items-center space-x-2">
-            <Key className="w-4 h-4" />
-            <span>Basic Authentication</span>
-          </h4>
-          
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Username
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter username"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+        <div style={s.section}>
+          <div style={s.sectionTitle}><Key size={13} /> Basic Authentication</div>
+          <label style={s.label}>Username</label>
+          <div style={s.inputWrap}>
+            <User size={13} style={s.inputIcon} />
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="username" style={s.input} />
           </div>
-        </div>
-      )}
-
-      {/* Bearer Token Fields */}
-      {authType === 'bearer' && (
-        <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
-          <h4 className="font-medium text-green-800 flex items-center space-x-2">
-            <Key className="w-4 h-4" />
-            <span>Bearer Token</span>
-          </h4>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Token
-            </label>
-            <textarea
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Enter your bearer token"
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none font-mono text-sm"
+          <label style={s.label}>Password</label>
+          <div style={s.inputWrap}>
+            <Lock size={13} style={s.inputIcon} />
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="password"
+              style={{ ...s.input, paddingRight: 32 }}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              This token will be sent in the Authorization header as: Bearer [token]
-            </p>
+            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+            </button>
           </div>
         </div>
       )}
 
- 
+      {authType === 'bearer' && (
+        <div style={s.section}>
+          <div style={s.sectionTitle}><Key size={13} /> Bearer Token</div>
+          <label style={s.label}>Token</label>
+          <textarea value={token} onChange={e => setToken(e.target.value)} placeholder="your_bearer_token_here" rows={3} style={s.textarea} />
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, fontFamily: "'DM Mono', monospace" }}>
+            Sent as: Authorization: Bearer [token]
+          </div>
+        </div>
+      )}
 
-      {/* Custom Headers Fields */}
       {authType === 'custom' && (
-        <div className="space-y-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-          <h4 className="font-medium text-purple-800">
-            Custom Headers
-          </h4>
-          <p className="text-sm text-purple-700">
-            Use the Headers tab to add custom authentication headers like:
-            <br />
-            • X-API-Key: your_api_key
-            <br />
-            • Authorization: Custom your_token
+        <div style={s.section}>
+          <div style={s.sectionTitle}>Custom Headers</div>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            Add custom auth headers in the Headers tab:<br />
+            <code style={{ fontFamily: "'DM Mono', monospace", color: 'var(--accent)', fontSize: 11 }}>X-API-Key: your_key</code>
           </p>
         </div>
       )}
 
-      {/* Action Buttons for non-MediMapper auth types */}
-      {authType  !== 'none' && (
-        <div className="flex space-x-3">
-          <button
-            onClick={handleSaveAuth}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Save className="w-4 h-4" />
-            <span>Save Auth</span>
-          </button>
-
-          <button
-            onClick={handleTestAuth}
-            disabled={isTesting}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isTesting ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <TestTube className="w-4 h-4" />
-            )}
-            <span>{isTesting ? 'Testing...' : 'Test Auth'}</span>
+      {authType !== 'none' && (
+        <div style={s.actionRow}>
+          <button onClick={handleSaveAuth} style={s.saveBtn}><Save size={13} /> Save</button>
+          <button onClick={handleTestAuth} disabled={isTesting} style={s.testBtn}>
+            {isTesting
+              ? <div style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'var(--text-secondary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              : <TestTube size={13} />
+            }
+            {isTesting ? 'Testing…' : 'Test'}
           </button>
         </div>
       )}
 
-      {/* Auth Status */}
       {authConfig && authConfig.type !== 'none' && (
-        <div className="p-3 bg-gray-50 rounded-lg border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-800">
-                {authConfig.type === 'basic' && 'Basic Authentication'}
-                {authConfig.type === 'bearer' && 'Bearer Token'}
-               
-                {authConfig.type === 'custom' && 'Custom Headers'}
-              </p>
-              <p className="text-xs text-gray-500">
-                Configured {new Date(authConfig.timestamp).toLocaleString()}
-              </p>
+        <div style={{ ...s.statusChip, marginTop: 14 }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#3ecf8e' }}>
+              {authConfig.type === 'basic' ? 'Basic Auth' : authConfig.type === 'bearer' ? 'Bearer Token' : 'Custom Headers'} configured
             </div>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: "'DM Mono', monospace" }}>
+              {new Date(authConfig.timestamp).toLocaleString()}
+            </div>
           </div>
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#3ecf8e', boxShadow: '0 0 8px rgba(62,207,142,0.5)' }} />
         </div>
       )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
