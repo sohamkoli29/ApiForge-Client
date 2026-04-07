@@ -132,7 +132,7 @@ const Sidebar = ({
       fontSize: 10, fontWeight: 700, color: 'var(--text-muted)',
     },
     content: { flex: 1, overflow: 'hidden', minHeight: 0 },
-    historyWrap: { height: '100%', display: 'flex', flexDirection: 'column' },
+    historyWrap: { height: '65vh', display: 'flex', flexDirection: 'column' },
     historyHeader: {
       padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       borderBottom: '1px solid var(--border)', flexShrink: 0,
@@ -288,7 +288,7 @@ const Sidebar = ({
         .history-item:hover { border-color: var(--accent-dim) !important; background: var(--bg-hover) !important; }
         .history-item:hover .delete-btn { opacity: 1 !important; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
+      `}</style>  
     </div>
   )
 }

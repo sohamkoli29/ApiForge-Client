@@ -57,7 +57,7 @@ const CollectionsManager = ({ collections, onCreateCollection, onUpdateCollectio
   const allCollections = collections.length > 0 ? collections : []
 
   const s = {
-    root: { height: '100%', display: 'flex', flexDirection: 'column' },
+    root: { height: '65vh', display: 'flex', flexDirection: 'column' },
     header: {
       padding: '10px 14px', borderBottom: '1px solid var(--border)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
