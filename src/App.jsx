@@ -137,7 +137,7 @@ function App() {
   // ApiForge view (original)
   return (
     <div style={{ background: 'var(--bg-base)', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Syne', sans-serif" }}>
-      <Toaster position="top-right" toastOptions={{ duration: 3000, style: { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '10px', fontFamily: "'Syne', sans-serif", fontSize: '13px', boxShadow: 'var(--shadow-md)' } }} />
+      <Toaster position="top-right" toastOptions={{ duration: 3000, style: { background: '#fff', color: '#1c1b1b', border: '1px solid #e5e2e1', borderLeft: '4px solid #C9A96E', borderRadius: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', boxShadow: '0 8px 24px rgba(45,45,45,0.1)' } }} />
 
       {/* Mobile Header */}
       <div style={{ display: 'none', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 50 }} className="mobile-header">
