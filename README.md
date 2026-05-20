@@ -194,4 +194,4 @@ Set these in Vercel → Settings → Environment Variables:
 ## Related
 
 - 🔧 [Backend Repository](https://github.com/sohamkoli29/ApiForge-Server)
-- 📖 Swagger API Docs: `https://apiforge-server-8axm.onrender.com/api/docs`
+- 📖 [Swagger API Docs](https://apiforge-server-8axm.onrender.com/api/docs)
