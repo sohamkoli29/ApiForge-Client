@@ -23,12 +23,9 @@ export default function AuthProvider({ children }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
       setUser(session?.user ?? null);
       setIsLoading(false);
       setAuthError(null);
-
-      // On Google sign-in, ensure profile exists
       if (event === 'SIGNED_IN' && session?.user) {
         await ensureUserProfile(session.user);
       }
@@ -83,24 +80,6 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  // // ── NEW: Google OAuth Future add-on ──────────────────────────────────────────────────────
-  // const signInWithGoogle = async () => {
-  //   setAuthError(null);
-  //   try {
-  //     const { error } = await supabase.auth.signInWithOAuth({
-  //       provider: 'google',
-  //       options: {
-  //         redirectTo: window.location.origin, // redirects back to your app after Google login
-  //       },
-  //     });
-  //     if (error) throw new Error(error.message);
-  //   } catch (error) {
-  //     setAuthError(error.message);
-  //     throw error;
-  //   }
-  // };
-  // ──────────────────────────────────────────────────────────────────────────
-
   const signOut = async () => {
     setAuthError(null);
     try {
@@ -137,7 +116,7 @@ export default function AuthProvider({ children }) {
 
   const value = {
     user, isLoading, isAuthenticated: !!user,
-    authError, signIn, signUp, signInWithGoogle, signOut, clearError
+    authError, signIn, signUp, signOut, clearError
   };
 
   if (isLoading) return <LoadingSpinner />;
