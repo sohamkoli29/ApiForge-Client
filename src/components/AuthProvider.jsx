@@ -83,22 +83,22 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  // ── NEW: Google OAuth ──────────────────────────────────────────────────────
-  const signInWithGoogle = async () => {
-    setAuthError(null);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin, // redirects back to your app after Google login
-        },
-      });
-      if (error) throw new Error(error.message);
-    } catch (error) {
-      setAuthError(error.message);
-      throw error;
-    }
-  };
+  // // ── NEW: Google OAuth Future add-on ──────────────────────────────────────────────────────
+  // const signInWithGoogle = async () => {
+  //   setAuthError(null);
+  //   try {
+  //     const { error } = await supabase.auth.signInWithOAuth({
+  //       provider: 'google',
+  //       options: {
+  //         redirectTo: window.location.origin, // redirects back to your app after Google login
+  //       },
+  //     });
+  //     if (error) throw new Error(error.message);
+  //   } catch (error) {
+  //     setAuthError(error.message);
+  //     throw error;
+  //   }
+  // };
   // ──────────────────────────────────────────────────────────────────────────
 
   const signOut = async () => {
